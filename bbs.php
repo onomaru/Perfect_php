@@ -15,7 +15,6 @@ if (!$link) {
 //mysqli_select_db($link, 'oneline_bbs');
 
 $errors = array();
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = null;
     //変数に値がセットされているかつNULLでない場合にTRUEを戻り値として返します。
@@ -58,47 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header('Location: http://' .$_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
     }
 }
-?>
 
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ひとこと掲示板</title>
-</head>
-<body>
-    <h1>ひとこと掲示板</h1>
-    <form action="bbs.php" method="post">
-    <?php if (count($errors)):?>
-        <ul class="error_list">
-            
-            <?php foreach ($errors as $error):?>
-            <li>
-                <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8')?>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif;?>
-    名前: <input type="text" name="name"><br>
-    ひとこと: <input type="text" name="comment" size="60"><br>
-    <input type="submit" name="submit" value="送信">
+//投稿された内容を取得するsqlを制作して結果を取得
+$sql = "SELECT * FROM `post` ORDER BY `create_at` DESC";
+$result = mysqli_query($link, $sql);
 
-    <?php
-    $sql = "SELECT * FROM `post` ORDER BY `create_at` DESC";
-    $result = mysqli_query($link, $sql);
-    ?>
-    <?php if ($result !== false && mysqli_num_rows($result)): ?>
-    <ul>
-        <?php while ($post = mysqli_fetch_assoc($result)): ?>
-        <li>
-            <?php echo htmlspecialchars($post['name'], ENT_QUOTES, 'UTF-8'); ?>:
-            <?php echo htmlspecialchars($post['comment'], ENT_QUOTES, 'UTF-8'); ?>
-            - <?php echo htmlspecialchars($post['create_at'], ENT_QUOTES, 'UTF-8'); ?>
-        </li>
-        <?php endwhile; ?>
-    </ul>
-    <?php endif; ?>
+//取得した結果を$postsに格納
+$posts = array();
+if ($result !== false && mysqli_num_rows($result)) {
+    while ($post = mysqli_fetch_assoc($result)) {
+        $posts[] = $post;
+    }
+}
 
-</body>
-</html>
+//取得結果を開放。接続を閉じる
+mysqli_free_result($result);
+mysqli_close($link);
+
+include('views/bbs_view.php');
